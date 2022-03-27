@@ -209,6 +209,9 @@ process bwa_align {
 // based on the @RGs from the FASTQs (the regex could be made to be more robust.)
 process picard_fastq_uBAM {
 
+    cpus big
+    tag { id }
+
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_picard
 
@@ -241,7 +244,8 @@ process picard_fastq_uBAM {
 // uBAMs and BAMs need to be QN sorted.
 process picard_sort_bam {
 
-    cpus large_core
+    cpus big
+    tag { id }
 
     input:
         tuple val(id), file(bam) from bam_files
@@ -269,6 +273,9 @@ joined_bams = sorted_bams.join(sorted_ubams)
 
 // Merge BAM and uBAM.
 process picard_merge {
+
+    cpus big
+    tag { id }
 
     input:
         tuple val(id), file(bam), file(ubam) from joined_bams
