@@ -51,6 +51,8 @@ process trim_reads {
     tuple file("*.html"), file("*.json")  into trim_log
 
   """
+    seqtk sample $forward 100000 > $forward
+    seqtk sample $reverse 100000 > $reverse
     fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
   """
 }
