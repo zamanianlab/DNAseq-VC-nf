@@ -51,8 +51,8 @@ process trim_reads {
     tuple file("*.html"), file("*.json")  into trim_log
 
   """
-    seqtk sample $forward 100000 > $forward
-    seqtk sample $reverse 100000 > $reverse
+    seqtk sample $forward s100000 > $forward
+    seqtk sample $reverse s100000 > $reverse
     fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
   """
 }
@@ -220,9 +220,6 @@ process picard_fastq_uBAM {
     output:
         tuple id, file("${id}.ubam") into sorted_ubams
 
-    when:
-        params.bam
-
     """
         SM=`echo ${id} | cut -c1-3 | tr -d '\n'`
         ID=${id}
@@ -255,9 +252,6 @@ process picard_sort_bam {
     output:
         tuple val(id), file("${id}_qn_sorted.bam") into sorted_bams
 
-    when:
-        params.bam
-
     """
         gatk \
           --java-options \
@@ -284,9 +278,6 @@ process picard_merge {
 
     output:
         tuple val(id), file("${id}_merged.bam") into merged_bams
-
-    when:
-        params.bam
 
     """
         gatk \
