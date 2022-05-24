@@ -86,8 +86,8 @@ trimmed_fqs.into { trimmed_reads_bwa; trimmed_reads_qc ; trimmed_reads_picard}
 // ** - Fetch genome and gene annotation files
 ////////////////////////////////////////////////
 
-genome_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/fasta/data/VectorBase-56_AaegyptiLVP_AGWG_Genome.fasta"
-annot_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/gff/data/VectorBase-56_AaegyptiLVP_AGWG.gff"
+genome_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/fasta/data/VectorBase-57_AaegyptiLVP_AGWG_Genome.fasta"
+annot_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/gff/data/VectorBase-57_AaegyptiLVP_AGWG.gff"
 
 process fetch_ref {
 
