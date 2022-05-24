@@ -46,7 +46,6 @@ process sample_reads {
 
   output:
     tuple id, file("${id}_R1_sub.fq.gz"), file("${id}_R2_sub.fq.gz") into subsampled_fqs
-    tuple file("*.html"), file("*.json")  into trim_log
 
   """
     seqtk sample -s 10 $forward 10000 > ${id}_R1_sub.fq.gz
@@ -63,7 +62,6 @@ process sample_reads {
 process trim_reads {
 
   publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{json,html}'
-  publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{fq.gz}'
 
   cpus small
   tag { id }
