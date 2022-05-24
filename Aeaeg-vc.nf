@@ -52,10 +52,12 @@ process trim_reads {
     tuple file("*.html"), file("*.json")  into trim_log
 
   """
-    seqtk sample -s100 $forward 100000 > $forward
-    seqtk sample -s100 $reverse 100000 > $reverse
-    fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
+    seqtk sample -s 10 $forward 100000 > ${id}_R1_sub.fq.gz
+    seqtk sample -s 10 $reverse 100000 > ${id}_R2_sub.fq.gz
+    fastp -i ${id}_R1_sub.fq.gz -I ${id}_R2_sub.fq.gz -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
   """
+// fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
+
 }
 trimmed_fqs.into { trimmed_reads_bwa; trimmed_reads_qc ; trimmed_reads_picard}
 
