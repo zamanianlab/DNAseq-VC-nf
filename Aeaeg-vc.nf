@@ -39,6 +39,7 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}_001.f[a-z]*q.gz", flat: t
 process trim_reads {
 
   publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{json,html}'
+  publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{fq.gz}'
 
   cpus small
   tag { id }
