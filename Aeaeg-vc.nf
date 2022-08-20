@@ -195,7 +195,7 @@ process bwa_align {
     output:
         file("${id}.flagstat.txt") into bwa_stats
         file("${id}.bam") into bam_files
-        file("${id}.bam.bai") into bam_indexes
+        file("${id}.bam.bai") into bam_indices
 
     script:
         index_base = bwa_indices[0].toString() - ~/.fa[.a-z]*/
@@ -207,6 +207,7 @@ process bwa_align {
           -K 100000000 \
           -v 3 \
           -t ${task.cpus} \
+          -M \
           -Y \
           -R \"${readGroup}\" \
           ${index_base}.fa \
@@ -216,12 +217,49 @@ process bwa_align {
         samtools view -@ ${task.cpus} -bS ${id}.sam > ${id}.unsorted.bam
         rm *.sam
         samtools flagstat ${id}.unsorted.bam
-        samtools sort -@ ${task.cpus} -m 8G -o ${id}.bam ${id}.unsorted.bam
+        samtools sort -@ ${task.cpus} -m 16G -o ${id}.bam ${id}.unsorted.bam
         rm *.unsorted.bam
         samtools index -@ ${task.cpus} -b ${id}.bam
         samtools flagstat ${id}.bam > ${id}.flagstat.txt
         """
 }
+
+////////////////////////////////////////////////
+// ** - mark dups
+////////////////////////////////////////////////
+
+process mark_dups {
+
+    publishDir "${output}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
+
+    input:
+        tuple val(id), file(bam) from bam_files
+
+    output:
+        tuple val(id), file("${id}_dups.bam") into duplicate_bams
+        file "${id}_marked_dup_stats.txt" into picard_logs
+
+    """
+        picard \\
+          -Xmx16g \\
+          MarkDuplicates \\
+          -I ${bam} \\
+          -O ${id}_dups.unsorted \\
+          -M ${id}_marked_dup_stats.txt \\
+          -TMP_DIR ${work}
+
+        picard \\
+          SortSam \\
+          -Xmx16g \\
+          --INPUT ${id}_dups.unsorted.bam \\
+          --OUTPUT ${id}_dups.bam \\
+          --SORT_ORDER coordinate
+    """
+}
+
+
+
+
 
 
 // ////////////////////////////////////////////////
