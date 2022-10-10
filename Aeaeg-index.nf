@@ -16,15 +16,6 @@ params.dir = null
 if( !params.dir ) error "Missing dir parameter"
 println "dir: $params.dir"
 
-params.rlen = null
-if( !params.rlen ) error "Missing length (average read length) parameter"
-println "rlen: $params.rlen"
-
-// flag for fastqc and multiqc (--qc)
-params.qc = false
-
-
-
 
 ////////////////////////////////////////////////
 // ** - Fetch genome and gene annotation files
@@ -35,7 +26,7 @@ annot_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_A
 
 process fetch_ref {
 
-    publishDir "${output}/Aeegypti_genome/", mode: 'copy'
+    publishDir "${output}/${params.dir}/", mode: 'copy'
 
     output:
         file("reference.fa") into reference_fa
@@ -58,7 +49,7 @@ process build_bwa_index {
 
     cpus huge
 
-    publishDir "${output}/Aeegypti_genome/", mode: 'copy'
+    publishDir "${output}/${params.dir}/", mode: 'copy'
 
     input:
         file("reference.fa") from bwa_index
