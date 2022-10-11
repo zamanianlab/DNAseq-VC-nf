@@ -25,34 +25,13 @@ params.qc = false
 
 
 ////////////////////////////////////////////////
-// ** - Pull in fq files
+// ** - Pull in fq files and indexed genome
 ////////////////////////////////////////////////
 
 Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}_001.f[a-z]*q.gz", flat: true)
           .set { fqs }
 
-
-////////////////////////////////////////////////
-// ** - Subsample reads
-////////////////////////////////////////////////
-
-process sample_reads {
-
-  cpus small
-  tag { id }
-
-  input:
-    tuple val(id), file(forward), file(reverse) from fqs
-
-  output:
-    tuple id, file("${id}_R1_sub.fq.gz"), file("${id}_R2_sub.fq.gz") into subsampled_fqs
-
-  """
-    seqtk sample -s 10 $forward 10000 > ${id}_R1_sub.fq.gz
-    seqtk sample -s 10 $reverse 10000 > ${id}_R2_sub.fq.gz
-  """
-
-}
+bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
 
 
 ////////////////////////////////////////////////
@@ -67,7 +46,7 @@ process trim_reads {
   tag { id }
 
   input:
-    tuple val(id), file(forward), file(reverse) from subsampled_fqs
+    tuple val(id), file(forward), file(reverse) from fqs
 
   output:
     tuple id, file("${id}_R1.fq.gz"), file("${id}_R2.fq.gz") into trimmed_fqs
@@ -83,51 +62,7 @@ trimmed_fqs.into { trimmed_reads_bwa; trimmed_reads_qc ; trimmed_reads_picard}
 
 
 ////////////////////////////////////////////////
-// ** - Fetch genome and gene annotation files
-////////////////////////////////////////////////
-
-genome_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/fasta/data/VectorBase-59_AaegyptiLVP_AGWG_Genome.fasta"
-annot_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/gff/data/VectorBase-59_AaegyptiLVP_AGWG.gff"
-
-process fetch_ref {
-
-    publishDir "${genome}/reference/", mode: 'copy'
-
-    output:
-        file("reference.fa") into reference_fa
-
-    """
-        echo '${genome_url}'
-        wget ${genome_url} -O reference.fa
-        echo '${annot_url}'
-        wget ${annot_url} -O geneset.gff
-    """
-}
-reference_fa.into { bwa_index }
-
-
-////////////////////////////////////////////////
-// ** - Index Genome (bwa)
-////////////////////////////////////////////////
-
-process build_bwa_index {
-
-    cpus huge
-
-    input:
-        file("reference.fa") from bwa_index
-
-    output:
-        file "reference.*" into bwa_indices
-
-    """
-        bwa index reference.fa
-    """
-}
-
-
-////////////////////////////////////////////////
-// ** - multiQC of trimmed fqs
+// ** - multiQC of trimmed fqs (--qc flag)
 ////////////////////////////////////////////////
 
 process fastqc {
