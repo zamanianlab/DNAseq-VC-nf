@@ -165,7 +165,7 @@ process bwa_align {
 
 process mark_dups {
 
-    publishDir "${output}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
+    publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
 
     input:
         tuple val(id), file(bam) from bam_files
