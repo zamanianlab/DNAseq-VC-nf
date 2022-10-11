@@ -5,7 +5,6 @@ input=params.input
 output=params.output
 work=params.work
 aux=params.aux
-genome=params.genome
 
 huge=params.huge
 big=params.big
