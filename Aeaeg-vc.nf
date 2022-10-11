@@ -28,7 +28,8 @@ params.qc = false
 // ** - Pull in fq files and indexed genome
 ////////////////////////////////////////////////
 
-Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}_001.f[a-z]*q.gz", flat: true)
+Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.f[a-z]*q.gz", flat: true) //for subsampled data
+//Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
           .set { fqs }
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
