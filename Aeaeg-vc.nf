@@ -125,7 +125,7 @@ process bwa_align {
 
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_bwa
-        file bwa_indices from bwa_indices.first()
+        file bwa_indices from bwa_indices.collect()
 
     output:
         file("${id}.flagstat.txt") into bwa_stats
