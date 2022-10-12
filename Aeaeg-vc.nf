@@ -49,11 +49,11 @@ process trim_reads {
     tuple val(id), file(forward), file(reverse) from fqs
 
   output:
-    tuple id, file("${id}_R1.fq.gz"), file("${id}_R2.fq.gz") into trimmed_fqs
+    tuple id, file("${id}_R1_trim.fq.gz"), file("${id}_R2_trim.fq.gz") into trimmed_fqs
     tuple file("*.html"), file("*.json")  into trim_log
 
   """
-    fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
+    fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_R1_trim.fq.gz -O ${id}_R2_trim.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
   """
 
 }
