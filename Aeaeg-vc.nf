@@ -129,7 +129,7 @@ process bwa_align {
 
     output:
         file("${id}.flagstat.txt") into bwa_stats
-        file("${id}.bam") into bam_files
+        tuple id, file("${id}.bam") into bam_files
         file("${id}.bam.bai") into bam_indices
 
     script:
@@ -164,14 +164,16 @@ process bwa_align {
 ////////////////////////////////////////////////
 
 process mark_dups {
-
     publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
+
+    cpus big
+    tag { id }
 
     input:
         tuple val(id), file(bam) from bam_files
 
     output:
-        tuple val(id), file("${id}_dups.bam") into duplicate_bams
+        tuple id, file("${id}_dups.bam") into duplicate_bams
         file "${id}_marked_dup_stats.txt" into picard_logs
 
     """
