@@ -173,14 +173,11 @@ process mark_dups {
         tuple val(id), file(bam) from bam_files
 
     output:
-        tuple id, file("${id}_marked_dups.unsorted.bam") into duplicate_bams
+        tuple id, file("${id}_marked_dups.bam") into duplicate_bams
         file "${id}_marked_dups_stats.txt" into picard_logs
 
     """
-        picard -Xmx16g MarkDuplicates \
-          -I ${bam} \
-          -O ${id}_marked_dups.unsorted.bam \
-          -M ${id}_marked_dups_stats.txt
+        picard -Xmx16g MarkDuplicates -I=${bam} -O=${id}_marked_dups.bam -M=${id}_marked_dups_stats.txt
     """
 }
 
