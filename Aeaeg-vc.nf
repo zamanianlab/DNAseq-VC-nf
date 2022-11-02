@@ -160,7 +160,7 @@ process bwa_align {
 }
 
 ////////////////////////////////////////////////
-// ** - mark dups
+// ** - mark dups (Picard)
 ////////////////////////////////////////////////
 
 process mark_dups {
@@ -173,7 +173,7 @@ process mark_dups {
         tuple val(id), file(bam) from bam_files
 
     output:
-        tuple id, file("${id}_marked_dups.bam") into duplicate_bams
+        tuple id, file("${id}_marked_dups.unsorted.bam") into duplicate_bams
         file "${id}_marked_dups_stats.txt" into picard_logs
 
     """
@@ -182,41 +182,64 @@ process mark_dups {
           MarkDuplicates \\
           -I ${bam} \\
           -O ${id}_marked_dups.unsorted.bam \\
-          -M ${id}_marked_dups_stats.txt \\
-          -TMP_DIR ${work}
-
-        picard \\
-          SortSam \\
-          -Xmx16g \\
-          --INPUT ${id}_marked_dups.unsorted.bam \\
-          --OUTPUT ${id}_marked_dups.bam \\
-          --SORT_ORDER coordinate
+          -M ${id}_marked_dups_stats.txt
     """
 }
 
 
+////////////////////////////////////////////////
+// ** - sortsam (Picard)
+////////////////////////////////////////////////
 
+// process mark_dups {
+//     publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
 
+//     cpus big
+//     tag { id }
+
+//     input:
+//         tuple val(id), file(bam) from bam_files
+
+//     output:
+//         tuple id, file("${id}_marked_dups.bam") into duplicate_bams
+//         file "${id}_marked_dups_stats.txt" into picard_logs
+
+//     """
+//         picard \\
+//           -Xmx16g \\
+//           MarkDuplicates \\
+//           -I ${bam} \\
+//           -O ${id}_marked_dups.unsorted.bam \\
+//           -M ${id}_marked_dups_stats.txt
+
+//         picard \\
+//           SortSam \\
+//           -Xmx16g \\
+//           --INPUT ${id}_marked_dups.unsorted.bam \\
+//           --OUTPUT ${id}_marked_dups.bam \\
+//           --SORT_ORDER coordinate
+//     """
+// }
 
 
 // ////////////////////////////////////////////////
 // // ** - VARIANT CALLING PIPELINE
 // ////////////////////////////////////////////////
-//
+
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
 // // uBAM from original FASTQs. NOTE: the rg variable will need to be adjusted
 // // based on the @RGs from the FASTQs (the regex could be made to be more robust.)
 // process picard_fastq_uBAM {
-//
+
 //     cpus big
 //     tag { id }
-//
+
 //     input:
 //         tuple val(id), file(forward), file(reverse) from trimmed_reads_picard
-//
+
 //     output:
 //         tuple id, file("${id}.ubam") into sorted_ubams
-//
+
 //     """
 //         SM=`echo ${id} | cut -c1-3 | tr -d '\n'`
 //         ID=${id}
