@@ -34,6 +34,7 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.fq.gz", flat: true) //for
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
 
 ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+ref_genome.into {ref_genome_recal_a; ref_genome_recal_b; ref_genome_gvcf}
 
 ////////////////////////////////////////////////
 // ** - Trim reads
@@ -58,7 +59,7 @@ process trim_reads {
   """
 
 }
-trimmed_fqs.into { trimmed_reads_bwa; trimmed_reads_qc ; trimmed_reads_picard}
+trimmed_fqs.into { trimmed_reads_bwa; trimmed_reads_qc ; trimmed_reads_picard }
 
 
 
@@ -190,34 +191,80 @@ process mark_dups {
 
     """
 }
+marked_bams.into {marked_bams_recal, marked_bams_gcvf}
 
 
 ////////////////////////////////////////////////
 // ** - base recalibration BaseRecalibrator & ApplyBQSR  (SKIP since no known sites vcf)
 ////////////////////////////////////////////////
 
-// process base_recalibration {
-//     publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
+// Get a list of known Ae. aegypti LVP variants from Ensembl.
+process fetch_variants {
 
-//     cpus big
-//     tag { id }
+    cpus small
 
-//     input:
-//         tuple val(id), file(bam) from marked_bams
-//         file("reference.fa") from ref_genome
+    output:
+        tuple file("known_variants.vcf.gz"), file("known_variants.vcf.gz.csi"), file("known_variants.vcf.gz.tbi") into known_variants
 
-//     output:
+    """
+        wget ftp://ftp.ensemblgenomes.org/pub/metazoa/release-55/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz \
+          -O known_variants.vcf.gz
+        wget ftp://ftp.ensemblgenomes.org/pub/metazoa/release-55/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz.csi \
+          -O known_variants.vcf.gz.csi
+        gatk IndexFeatureFile \
+          -I known_variants.vcf.gz
+    """
+}
 
-//     """
+// base recalibration
+process base_recalibration {
+    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
 
-//         gatk BaseRecalibrator \
-//           -I ${bam} \
-//           -R reference.fa \
-//           -O recal_data.table
+    cpus big
+    tag { id }
 
-//     """
-// }
+    input:
+        tuple val(id), file(bam) from marked_bams_recal
+        file("reference.fa") from ref_genome_recal_a
+        tuple file(vcf), file(index_csi), file(index_tbi) from known_variants
 
+    output:
+        tuple id, file("${bam}"), file("${id}_recal_data.table") into brdt
+
+    """
+
+        gatk BaseRecalibrator \
+          -I ${bam} \
+          -R reference.fa \
+          --known-sites ${vcf} \
+          -O ${id}_recal_data.table
+
+    """
+}
+
+// apply recalibration
+process apply_recalibration {
+
+    cpus big
+    tag { id }
+
+    input:
+        tuple val(id), file(bam), file(recal_table) from brdt
+        file("reference.fa") from ref_genome_recal_b
+
+    output:
+        tuple stdout, file("${id}_recal.bam") into recal_bams
+
+    """
+        gatk ApplyBQSR \
+          -R reference.fa \
+          --sequence-dictionary ${reference_dict} \
+          -I ${bam} \
+          --bqsr-recal-file ${recal_table} \
+          -O "${id}_recal.bam"
+        echo ${id} | cut -c1-3 | tr -d '\n'
+    """
+}
 
 ////////////////////////////////////////////////
 // ** - VARIANT CALLING PIPELINE
@@ -231,8 +278,8 @@ process haplotype_caller {
     tag { id }
 
     input:
-        tuple val(id), file(bam) from marked_bams
-        file ("reference.fa") from ref_genome
+        tuple val(id), file(bam) from marked_bams_gvcf
+        file ("reference.fa") from ref_genome_gvcf
 
     output:
         tuple val(id), file("${id}.vcf.gz") into haplotype_gvcfs
@@ -247,9 +294,13 @@ process haplotype_caller {
           -I ${bam} \
           -O ${id}.vcf.gz \
           -ERC GVCF
+
         
     """
 }
+
+sample_map = haplotype_gvcfs.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
+
 
 // GenomicsDBImport: import single-sample GVCFs
 process combine_gvcfs {
@@ -268,7 +319,7 @@ process combine_gvcfs {
         gatk --java-options "-Xmx4g -Xms4g" \
           GenomicsDBImport \
           --genomicsdb-workspace-path ${work}/gvcf_db \
-          --sample-name-map cohort.sample_map \
+          --sample-name-map sample_map.tsv \
           --tmp-dir . \
           --reader-threads ${task.cpus}
 
