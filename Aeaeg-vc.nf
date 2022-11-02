@@ -211,9 +211,9 @@ process base_recalibration {
     """
 
         gatk BaseRecalibrator \
-          I=${bam} \
-          R=reference.fa \
-          O=recal_data.table
+          -I ${bam} \
+          -R reference.fa \
+          -O recal_data.table
 
     """
 }
