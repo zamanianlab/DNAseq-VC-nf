@@ -240,6 +240,7 @@ process haplotype_caller {
     """
         gatk CreateSequenceDictionary -R reference.fa
         samtools faidx reference.fa
+        samtools index ${bam}
 
         gatk --java-options "-Xmx4g" HaplotypeCaller  \
           -R reference.fa \
