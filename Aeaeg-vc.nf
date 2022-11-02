@@ -32,9 +32,8 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.fq.gz", flat: true) //for
           .set { fqs }
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
-bwa_indices.into { bwa_indices_bwa_align; bwa_indices_gvcf }
 
-// ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 
 ////////////////////////////////////////////////
 // ** - Trim reads
@@ -127,7 +126,7 @@ process bwa_align {
 
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_bwa
-        file bwa_indices from bwa_indices_bwa_align.collect()
+        file bwa_indices from bwa_indices.collect()
 
     output:
         file("${id}.flagstat.txt") into bwa_stats
@@ -233,12 +232,14 @@ process haplotype_caller {
 
     input:
         tuple val(id), file(bam) from marked_bams
-        file bwa_indices from bwa_indices_gvcf.collect()
+        file ("reference.fa") from ref_genome
 
     output:
         file "${id}.vcf.gz" into haplotype_output
 
     """
+        gatk CreateSequenceDictionary -R ref.fa
+        samtools faidx reference.fa
 
         gatk --java-options "-Xmx4g" HaplotypeCaller  \
           -R reference.fa \
