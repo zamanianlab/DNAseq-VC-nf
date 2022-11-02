@@ -164,7 +164,7 @@ process bwa_align {
 ////////////////////////////////////////////////
 
 process mark_dups {
-    publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
+    publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dups_stats.txt'
 
     cpus big
     tag { id }
