@@ -33,7 +33,7 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.fq.gz", flat: true) //for
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
 
-ref_genome = file(input + "/Aeaegypti_ref/reference.fasta")
+ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 
 ////////////////////////////////////////////////
 // ** - Trim reads
