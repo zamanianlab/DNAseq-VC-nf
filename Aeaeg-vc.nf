@@ -160,7 +160,7 @@ process bwa_align {
 }
 
 ////////////////////////////////////////////////
-// ** - mark dups (Picard)
+// ** - markdups and sortsam (Picard)
 ////////////////////////////////////////////////
 
 process mark_dups {
@@ -177,8 +177,15 @@ process mark_dups {
         file "${id}_marked_dups_stats.txt" into picard_logs
 
     """
-        picard -Xmx8g MarkDuplicates I=${bam} O=${id}_marked_dups.bam M=${id}_marked_dups_stats.txt
+        picard -Xmx8g MarkDuplicates \
+          I=${bam} \
+          O=${id}_marked_dups.unsorted.bam \
+          M=${id}_marked_dups_stats.txt
         
+        picard -Xmx8g SortSam \
+          I=${id}_marked_dups.unsorted.bam \
+          O=${id}_marked_dups.bam \
+          SORT_ORDER=coordinate
     """
 }
 
