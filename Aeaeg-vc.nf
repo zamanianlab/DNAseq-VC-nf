@@ -233,7 +233,7 @@ process haplotype_caller {
 
     input:
         tuple val(id), file(bam) from marked_bams
-        file bwa_indices from bwa_indices_cvcf.collect()
+        file bwa_indices from bwa_indices_gvcf.collect()
 
     output:
         file "${id}.vcf.gz" into haplotype_output
