@@ -173,7 +173,7 @@ process mark_dups {
         tuple val(id), file(bam) from bam_files
 
     output:
-        tuple id, file("${id}_marked_dups.bam") into duplicate_bams
+        tuple id, file("${id}_marked_dups.bam") into marked_bams
         file "${id}_marked_dups_stats.txt" into picard_logs
 
     """
@@ -186,42 +186,40 @@ process mark_dups {
           I=${id}_marked_dups.unsorted.bam \
           O=${id}_marked_dups.bam \
           SORT_ORDER=coordinate
+
     """
 }
 
+
 ////////////////////////////////////////////////
-// ** - sortsam (Picard)
+// ** - base recalibration
 ////////////////////////////////////////////////
 
-// process mark_dups {
-//     publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dup_stats.txt'
+process base_recalibration {
+    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
 
-//     cpus big
-//     tag { id }
+    cpus big
+    tag { id }
 
-//     input:
-//         tuple val(id), file(bam) from bam_files
+    input:
+        tuple val(id), file(bam) from marked_bams
+        file bwa_indices from bwa_indices.collect()
 
-//     output:
-//         tuple id, file("${id}_marked_dups.bam") into duplicate_bams
-//         file "${id}_marked_dups_stats.txt" into picard_logs
+    output:
 
-//     """
-//         picard \\
-//           -Xmx16g \\
-//           MarkDuplicates \\
-//           -I ${bam} \\
-//           -O ${id}_marked_dups.unsorted.bam \\
-//           -M ${id}_marked_dups_stats.txt
+script:
+    index_base = bwa_indices[0].toString() - ~/.fa[.a-z]*/
 
-//         picard \\
-//           SortSam \\
-//           -Xmx16g \\
-//           --INPUT ${id}_marked_dups.unsorted.bam \\
-//           --OUTPUT ${id}_marked_dups.bam \\
-//           --SORT_ORDER coordinate
-//     """
-// }
+    """
+
+        gatk -Xmx8g BaseRecalibrator \
+          I=${bam} \
+          R=${index_base}.fa \
+          O=recal_data.table
+
+    """
+}
+
 
 
 // ////////////////////////////////////////////////
