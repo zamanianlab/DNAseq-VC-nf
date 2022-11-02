@@ -210,14 +210,13 @@ process base_recalibration {
 
     """
 
-        gatk -Xmx8g BaseRecalibrator \
+        gatk BaseRecalibrator \
           I=${bam} \
           R=reference.fa \
           O=recal_data.table
 
     """
 }
-
 
 
 // ////////////////////////////////////////////////
