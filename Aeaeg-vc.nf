@@ -204,7 +204,7 @@ process base_recalibration {
 
     input:
         tuple val(id), file(bam) from marked_bams
-        file(reference.fa) from ref_genome
+        file("reference.fa") from ref_genome
 
     output:
 
