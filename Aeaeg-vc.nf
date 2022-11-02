@@ -223,7 +223,7 @@ process mark_dups {
 // ** - VARIANT CALLING PIPELINE
 ////////////////////////////////////////////////
 
-
+// single-sample HaplotypeCaller -> GVCFs
 process haplotype_caller {
    publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
 
@@ -249,7 +249,34 @@ process haplotype_caller {
 
     """
 }
+joined_GVCFs = sorted_bams.join(sorted_ubams)
 
+// GenomicsDBImport: import single-sample GVCFs
+process haplotype_caller {
+   //publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
+
+    cpus big
+    tag { id }
+
+    input:
+        tuple val(id), file(bam) from marked_bams
+        file ("reference.fa") from ref_genome
+
+    output:
+        file "${id}.vcf.gz" into haplotype_output
+
+    """
+        gatk CreateSequenceDictionary -R reference.fa
+        samtools faidx reference.fa
+
+        gatk --java-options "-Xmx4g" HaplotypeCaller  \
+          -R reference.fa \
+          -I ${bam} \
+          -O ${id}.vcf.gz \
+          -ERC GVCF
+
+    """
+}
 
 
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
