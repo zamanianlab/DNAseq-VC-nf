@@ -193,11 +193,39 @@ process mark_dups {
 
 
 ////////////////////////////////////////////////
-// ** - base recalibration
+// ** - base recalibration BaseRecalibrator & ApplyBQSR  (SKIP since no known sites vcf)
 ////////////////////////////////////////////////
 
-process base_recalibration {
-    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
+// process base_recalibration {
+//     publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
+
+//     cpus big
+//     tag { id }
+
+//     input:
+//         tuple val(id), file(bam) from marked_bams
+//         file("reference.fa") from ref_genome
+
+//     output:
+
+//     """
+
+//         gatk BaseRecalibrator \
+//           -I ${bam} \
+//           -R reference.fa \
+//           -O recal_data.table
+
+//     """
+// }
+
+
+////////////////////////////////////////////////
+// ** - VARIANT CALLING PIPELINE
+////////////////////////////////////////////////
+
+
+process haplotype_caller {
+   publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
 
     cpus big
     tag { id }
@@ -207,21 +235,20 @@ process base_recalibration {
         file("reference.fa") from ref_genome
 
     output:
+        file "${id}.vcf.gz" into haplotype_output
 
     """
 
-        gatk BaseRecalibrator \
-          -I ${bam} \
+        gatk --java-options "-Xmx4g" HaplotypeCaller  \
           -R reference.fa \
-          -O recal_data.table
+          -I ${bam} \
+          -O ${id}.vcf.gz \
+          -ERC GVCF
 
     """
 }
 
 
-// ////////////////////////////////////////////////
-// // ** - VARIANT CALLING PIPELINE
-// ////////////////////////////////////////////////
 
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
 // // uBAM from original FASTQs. NOTE: the rg variable will need to be adjusted
