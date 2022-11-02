@@ -235,35 +235,7 @@ process haplotype_caller {
         file ("reference.fa") from ref_genome
 
     output:
-        file "${id}.vcf.gz" into haplotype_output
-
-    """
-        gatk CreateSequenceDictionary -R ref.fa
-        samtools faidx reference.fa
-
-        gatk --java-options "-Xmx4g" HaplotypeCaller  \
-          -R reference.fa \
-          -I ${bam} \
-          -O ${id}.vcf.gz \
-          -ERC GVCF
-
-    """
-}
-joined_GVCFs = sorted_bams.join(sorted_ubams)
-
-// GenomicsDBImport: import single-sample GVCFs
-process haplotype_caller {
-   //publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
-
-    cpus big
-    tag { id }
-
-    input:
-        tuple val(id), file(bam) from marked_bams
-        file ("reference.fa") from ref_genome
-
-    output:
-        file "${id}.vcf.gz" into haplotype_output
+        tuple val(id), file("${id}.vcf.gz") into haplotype_gvcfs
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -274,6 +246,32 @@ process haplotype_caller {
           -I ${bam} \
           -O ${id}.vcf.gz \
           -ERC GVCF
+
+        
+
+    """
+}
+
+// GenomicsDBImport: import single-sample GVCFs
+process combine_gvcfs {
+
+    cpus big
+    tag { id }
+
+    input:
+      file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
+
+    output:
+
+    """
+        mkdir ${work}/gvcf_db
+
+        gatk --java-options "-Xmx4g -Xms4g" \
+          GenomicsDBImport \
+          --genomicsdb-workspace-path ${work}/gvcf_db \
+          --sample-name-map cohort.sample_map \
+          --tmp-dir . \
+          --reader-threads ${task.cpus}
 
     """
 }
