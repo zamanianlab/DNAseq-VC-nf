@@ -34,7 +34,6 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.fq.gz", flat: true) //for
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
 
 ref_genome = file(input + "/Aeaegypti_ref/reference.fasta")
-ref_genome.into { ref_basecal }
 
 ////////////////////////////////////////////////
 // ** - Trim reads
@@ -205,7 +204,7 @@ process base_recalibration {
 
     input:
         tuple val(id), file(bam) from marked_bams
-        file(reference.fa) from ref_basecal
+        file(reference.fa) from ref_genome
 
     output:
 
