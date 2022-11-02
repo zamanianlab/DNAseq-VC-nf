@@ -177,15 +177,12 @@ process mark_dups {
         file "${id}_marked_dups_stats.txt" into picard_logs
 
     """
-        picard \\
-          -Xmx16g \\
-          MarkDuplicates \\
-          -I ${bam} \\
-          -O ${id}_marked_dups.unsorted.bam \\
+        picard -Xmx16g MarkDuplicates \
+          -I ${bam} \
+          -O ${id}_marked_dups.unsorted.bam \
           -M ${id}_marked_dups_stats.txt
     """
 }
-
 
 ////////////////////////////////////////////////
 // ** - sortsam (Picard)
