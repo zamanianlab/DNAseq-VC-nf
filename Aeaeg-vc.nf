@@ -267,6 +267,26 @@ process apply_recalibration {
     """
 }
 
+// // Generate summary plots to visualize improvements. (need second output above of id/recal_table)
+// process plot_recalibration {
+
+//       publishDir "${output}/base_recal", mode: 'copy', pattern: '*_AnalyzeCovariates.pdf'
+
+//       input:
+//           tuple val(id), file(recal_table) from brdt2
+
+//       output:
+//           file("${id}_AnalyzeCovariates.pdf") into recal_plots
+
+
+//       """
+//           gatk AnalyzeCovariates \
+//             -bqsr ${recal_table} \
+//             -plots "${id}_AnalyzeCovariates.pdf"
+//  """
+// }
+
+
 ////////////////////////////////////////////////
 // ** - VARIANT CALLING PIPELINE
 ////////////////////////////////////////////////
@@ -303,29 +323,31 @@ process haplotype_caller {
 sample_map = haplotype_gvcfs.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
 
-// GenomicsDBImport: import single-sample GVCFs
-// process combine_gvcfs {
+// GenomicsDBImport: import single-sample GVCFs *stuck here*
+process combine_gvcfs {
 
-//     cpus big
-//     tag { id }
+    cpus big
 
-//     input:
-//       file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
+    input:
+      file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
+      file("sample_map.tsv") from sample_map
 
-//     output:
+    output:
 
-//     """
-//         mkdir ${work}/gvcf_db
+    """
+        mkdir ${work}/gvcf_db
 
-//         gatk --java-options "-Xmx4g -Xms4g" \
-//           GenomicsDBImport \
-//           --genomicsdb-workspace-path ${work}/gvcf_db \
-//           --sample-name-map sample_map.tsv \
-//           --tmp-dir . \
-//           --reader-threads ${task.cpus}
+        cat sample_map.tsv
 
-//     """
-// }
+        gatk --java-options "-Xmx4g -Xms4g" \
+          GenomicsDBImport \
+          --genomicsdb-workspace-path ${work}/gvcf_db \
+          --sample-name-map sample_map.tsv \
+          --tmp-dir . \
+          --reader-threads ${task.cpus}
+
+    """
+}
 
 
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
