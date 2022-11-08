@@ -191,7 +191,6 @@ process mark_dups {
 
     """
 }
-marked_bams.into {marked_bams_recal, marked_bams_gcvf}
 
 
 ////////////////////////////////////////////////
@@ -224,7 +223,7 @@ process base_recalibration {
     tag { id }
 
     input:
-        tuple val(id), file(bam) from marked_bams_recal
+        tuple val(id), file(bam) from marked_bams
         file("reference.fa") from ref_genome_recal_a
         tuple file(vcf), file(index_csi), file(index_tbi) from known_variants
 
