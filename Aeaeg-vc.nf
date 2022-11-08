@@ -240,29 +240,29 @@ process base_recalibration {
     """
 }
 
-// apply recalibration
-process apply_recalibration {
+// // apply recalibration
+// process apply_recalibration {
 
-    cpus big
-    tag { id }
+//     cpus big
+//     tag { id }
 
-    input:
-        tuple val(id), file(bam), file(recal_table) from brdt
-        file("reference.fa") from ref_genome
+//     input:
+//         tuple val(id), file(bam), file(recal_table) from brdt
+//         file("reference.fa") from ref_genome
 
-    output:
-        tuple stdout, file("${id}_recal.bam") into recal_bams
+//     output:
+//         tuple stdout, file("${id}_recal.bam") into recal_bams
 
-    """
-        gatk ApplyBQSR \
-          -R reference.fa \
-          --sequence-dictionary ${reference_dict} \
-          -I ${bam} \
-          --bqsr-recal-file ${recal_table} \
-          -O "${id}_recal.bam"
-        echo ${id} | cut -c1-3 | tr -d '\n'
-    """
-}
+//     """
+//         gatk ApplyBQSR \
+//           -R reference.fa \
+//           --sequence-dictionary ${reference_dict} \
+//           -I ${bam} \
+//           --bqsr-recal-file ${recal_table} \
+//           -O "${id}_recal.bam"
+//         echo ${id} | cut -c1-3 | tr -d '\n'
+//     """
+// }
 
 ////////////////////////////////////////////////
 // ** - VARIANT CALLING PIPELINE
