@@ -276,7 +276,7 @@ process haplotype_caller {
     tag { id }
 
     input:
-        tuple val(id), file(bam) from marked_bams_gvcf
+        tuple val(id), file(bam) from recal_bams
         file ("reference.fa") from ref_genome
 
     output:
