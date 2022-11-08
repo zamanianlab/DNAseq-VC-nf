@@ -216,7 +216,6 @@ process fetch_variants {
 
 // base recalibration
 process base_recalibration {
-    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: 'recal_data.table'
 
     cpus big
     tag { id }
@@ -244,6 +243,7 @@ process base_recalibration {
 
 // apply recalibration
 process apply_recalibration {
+    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: '*.pdf'
 
     cpus big
     tag { id }
@@ -254,6 +254,7 @@ process apply_recalibration {
 
     output:
         tuple id, file("${id}_recal.bam") into recal_bams
+        file ("${id}_AnalyzeCovariates.pdf") into recal_logs
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -264,27 +265,12 @@ process apply_recalibration {
           -I ${bam} \
           --bqsr-recal-file ${recal_table} \
           -O "${id}_recal.bam"
+
+        gatk AnalyzeCovariates \
+//        -bqsr ${recal_table} \
+//        -plots "${id}_AnalyzeCovariates.pdf"
     """
 }
-
-// // Generate summary plots to visualize improvements. (need second output above of id/recal_table)
-// process plot_recalibration {
-
-//       publishDir "${output}/base_recal", mode: 'copy', pattern: '*_AnalyzeCovariates.pdf'
-
-//       input:
-//           tuple val(id), file(recal_table) from brdt2
-
-//       output:
-//           file("${id}_AnalyzeCovariates.pdf") into recal_plots
-
-
-//       """
-//           gatk AnalyzeCovariates \
-//             -bqsr ${recal_table} \
-//             -plots "${id}_AnalyzeCovariates.pdf"
-//  """
-// }
 
 
 ////////////////////////////////////////////////
@@ -334,6 +320,7 @@ process combine_gvcfs {
 
     output:
 
+
     """
         mkdir ${work}/gvcf_db
 
@@ -348,6 +335,32 @@ process combine_gvcfs {
 
     """
 }
+
+
+// Joint-Call Cohort GenotypeGVCFs
+process joint_call_gvcfs {
+
+    cpus big
+
+    input:
+        file ("reference.fa") from ref_genome
+    
+    output:
+        file("output.vcf.gz") into joint_vcf
+
+    """
+      gatk CreateSequenceDictionary -R reference.fa
+      samtools faidx reference.fa
+
+      gatk --java-options "-Xmx4g" GenotypeGVCFs \
+        -R reference.fa \
+        -V ${work}/gvcf_db \
+        -O output.vcf.gz \
+        --tmp-dir . \
+
+    """
+}
+
 
 
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
