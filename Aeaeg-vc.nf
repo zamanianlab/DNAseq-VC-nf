@@ -240,29 +240,29 @@ process base_recalibration {
     """
 }
 
-// // apply recalibration
-// process apply_recalibration {
+// apply recalibration
+process apply_recalibration {
 
-//     cpus big
-//     tag { id }
+    cpus big
+    tag { id }
 
-//     input:
-//         tuple val(id), file(bam), file(recal_table) from brdt
-//         file("reference.fa") from ref_genome
+    input:
+        tuple val(id), file(bam), file(recal_table) from brdt
+        file("reference.fa") from ref_genome
 
-//     output:
-//         tuple stdout, file("${id}_recal.bam") into recal_bams
+    output:
+        tuple stdout, file("${id}_recal.bam") into recal_bams
 
-//     """
-//         gatk ApplyBQSR \
-//           -R reference.fa \
-//           --sequence-dictionary ${reference_dict} \
-//           -I ${bam} \
-//           --bqsr-recal-file ${recal_table} \
-//           -O "${id}_recal.bam"
-//         echo ${id} | cut -c1-3 | tr -d '\n'
-//     """
-// }
+    """
+        gatk ApplyBQSR \
+          -R reference.fa \
+          --sequence-dictionary ${reference_dict} \
+          -I ${bam} \
+          --bqsr-recal-file ${recal_table} \
+          -O "${id}_recal.bam"
+        echo ${id} | cut -c1-3 | tr -d '\n'
+    """
+}
 
 ////////////////////////////////////////////////
 // ** - VARIANT CALLING PIPELINE
@@ -301,28 +301,28 @@ sample_map = haplotype_gvcfs.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name
 
 
 // GenomicsDBImport: import single-sample GVCFs
-process combine_gvcfs {
+// process combine_gvcfs {
 
-    cpus big
-    tag { id }
+//     cpus big
+//     tag { id }
 
-    input:
-      file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
+//     input:
+//       file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
 
-    output:
+//     output:
 
-    """
-        mkdir ${work}/gvcf_db
+//     """
+//         mkdir ${work}/gvcf_db
 
-        gatk --java-options "-Xmx4g -Xms4g" \
-          GenomicsDBImport \
-          --genomicsdb-workspace-path ${work}/gvcf_db \
-          --sample-name-map sample_map.tsv \
-          --tmp-dir . \
-          --reader-threads ${task.cpus}
+//         gatk --java-options "-Xmx4g -Xms4g" \
+//           GenomicsDBImport \
+//           --genomicsdb-workspace-path ${work}/gvcf_db \
+//           --sample-name-map sample_map.tsv \
+//           --tmp-dir . \
+//           --reader-threads ${task.cpus}
 
-    """
-}
+//     """
+// }
 
 
 // // GATK likes to use both aligned and unaligned reads, so we first generate a
