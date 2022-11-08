@@ -230,6 +230,8 @@ process base_recalibration {
         tuple id, file("${bam}"), file("${id}_recal_data.table") into brdt
 
     """
+        gatk CreateSequenceDictionary -R reference.fa
+        samtools faidx reference.fa
 
         gatk BaseRecalibrator \
           -I ${bam} \
