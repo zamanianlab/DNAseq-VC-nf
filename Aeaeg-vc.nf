@@ -289,7 +289,7 @@ process haplotype_caller {
         file ("reference.fa") from ref_genome
 
     output:
-        tuple val(id), file("${id}.vcf.gz") into haplotype_gvcfs
+        tuple val(id), file("${id}.vcf.gz") into gvcfs
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -306,7 +306,8 @@ process haplotype_caller {
     """
 }
 
-sample_map = haplotype_gvcfs.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
+gvcfs.into {gvcfs_map; gvcfs_combine}
+sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
 
 // GenomicsDBImport: import single-sample GVCFs *stuck here*
@@ -315,7 +316,7 @@ process combine_gvcfs {
     cpus big
 
     input:
-      file (gvcfs) from haplotype_gvcfs.collect().ifEmpty([])
+      file (gvcfs) from gvcfs_combine.collect().ifEmpty([])
       file("sample_map.tsv") from sample_map
 
     output:
@@ -339,6 +340,7 @@ process combine_gvcfs {
 
 // Joint-Call Cohort GenotypeGVCFs
 process joint_call_gvcfs {
+   publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: 'output.vcf.gz'
 
     cpus big
 
