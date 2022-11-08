@@ -256,6 +256,9 @@ process apply_recalibration {
         tuple stdout, file("${id}_recal.bam") into recal_bams
 
     """
+        gatk CreateSequenceDictionary -R reference.fa
+        samtools faidx reference.fa
+        
         gatk ApplyBQSR \
           -R reference.fa \
           -I ${bam} \
