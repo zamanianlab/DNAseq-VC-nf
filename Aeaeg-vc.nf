@@ -320,7 +320,7 @@ process combine_gvcfs {
       file("sample_map.tsv") from sample_map
 
     output:
-
+      file("gvcf_db.txt") into gvcf_db_success
 
     """
         mkdir ${work}/gvcf_db
@@ -334,6 +334,7 @@ process combine_gvcfs {
           --tmp-dir . \
           --reader-threads ${task.cpus}
 
+        echo "gvcf_db created" > gvcf_db.txt
     """
 }
 
@@ -346,6 +347,7 @@ process joint_call_gvcfs {
 
     input:
         file ("reference.fa") from ref_genome
+        file("gvcf_db.txt") from gvcf_db_success
     
     output:
         file("output.vcf.gz") into joint_vcf
