@@ -34,7 +34,6 @@ Channel.fromFilePairs(input + "/${params.dir}/*_R{1,2}.fq.gz", flat: true) //for
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
 
 ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
-ref_genome.into {ref_genome_recal_a; ref_genome_recal_b; ref_genome_gvcf}
 
 ////////////////////////////////////////////////
 // ** - Trim reads
@@ -224,7 +223,7 @@ process base_recalibration {
 
     input:
         tuple val(id), file(bam) from marked_bams
-        file("reference.fa") from ref_genome_recal_a
+        file("reference.fa") from ref_genome
         tuple file(vcf), file(index_csi), file(index_tbi) from known_variants
 
     output:
@@ -249,7 +248,7 @@ process apply_recalibration {
 
     input:
         tuple val(id), file(bam), file(recal_table) from brdt
-        file("reference.fa") from ref_genome_recal_b
+        file("reference.fa") from ref_genome
 
     output:
         tuple stdout, file("${id}_recal.bam") into recal_bams
@@ -278,7 +277,7 @@ process haplotype_caller {
 
     input:
         tuple val(id), file(bam) from marked_bams_gvcf
-        file ("reference.fa") from ref_genome_gvcf
+        file ("reference.fa") from ref_genome
 
     output:
         tuple val(id), file("${id}.vcf.gz") into haplotype_gvcfs
