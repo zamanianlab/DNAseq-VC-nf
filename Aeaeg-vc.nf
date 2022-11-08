@@ -258,7 +258,6 @@ process apply_recalibration {
     """
         gatk ApplyBQSR \
           -R reference.fa \
-          --sequence-dictionary ${reference_dict} \
           -I ${bam} \
           --bqsr-recal-file ${recal_table} \
           -O "${id}_recal.bam"
