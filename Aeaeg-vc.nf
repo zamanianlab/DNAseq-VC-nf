@@ -254,7 +254,7 @@ process apply_recalibration {
 
     output:
         tuple id, file("${id}_recal.bam") into recal_bams
-        file ("${id}_AnalyzeCovariates.pdf") into recal_logs
+       // file ("${id}_AnalyzeCovariates.pdf") into recal_logs
 
     """
         gatk CreateSequenceDictionary -R reference.fa
