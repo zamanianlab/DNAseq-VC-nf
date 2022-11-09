@@ -243,7 +243,7 @@ process base_recalibration {
 
 // apply recalibration
 process apply_recalibration {
-    publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: '*.pdf'
+    //publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: '*.pdf'
 
     cpus big
     tag { id }
@@ -266,11 +266,13 @@ process apply_recalibration {
           --bqsr-recal-file ${recal_table} \
           -O "${id}_recal.bam"
 
-        gatk AnalyzeCovariates \
-          -bqsr ${recal_table} \
-          -plots "${id}_AnalyzeCovariates.pdf"
     """
 }
+
+ //       gatk AnalyzeCovariates \
+  //        -bqsr ${recal_table} \
+  //        -plots "${id}_AnalyzeCovariates.pdf"
+
 
 
 ////////////////////////////////////////////////
