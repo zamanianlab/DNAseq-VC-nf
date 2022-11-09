@@ -267,8 +267,8 @@ process apply_recalibration {
           -O "${id}_recal.bam"
 
         gatk AnalyzeCovariates \
-//        -bqsr ${recal_table} \
-//        -plots "${id}_AnalyzeCovariates.pdf"
+          -bqsr ${recal_table} \
+          -plots "${id}_AnalyzeCovariates.pdf"
     """
 }
 
