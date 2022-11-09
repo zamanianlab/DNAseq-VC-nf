@@ -309,7 +309,7 @@ process haplotype_caller {
 }
 
 gvcfs.into {gvcfs_map; gvcfs_combine}
-sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
+sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}.vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
 
 // GenomicsDBImport: import single-sample GVCFs *stuck here*
