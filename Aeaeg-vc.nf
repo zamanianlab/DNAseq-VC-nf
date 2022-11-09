@@ -292,6 +292,7 @@ process haplotype_caller {
 
     output:
         tuple val(id), file("${id}.vcf.gz") into gvcfs
+        file("${id}.vcf.gz.tbi") into gvcf_indices
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -318,7 +319,8 @@ process combine_gvcfs {
     cpus big
 
     input:
-      file (gvcfs) from gvcfs_combine.collect().ifEmpty([])
+      file(gvcfs) from gvcfs_combine.collect().ifEmpty([])
+      file(gvcf_ix) from gvcf_indices.collect().ifEmpty([])
       file("sample_map.tsv") from sample_map
 
     output:
