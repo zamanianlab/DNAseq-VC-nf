@@ -363,7 +363,7 @@ process joint_call_gvcfs {
 
       gatk --java-options "-Xmx4g" GenotypeGVCFs \
         -R reference.fa \
-        -V ${work}/gvcf_db \
+        -V gendb://${work}/gvcf_db \
         -O output.vcf.gz \
         --tmp-dir . \
 
