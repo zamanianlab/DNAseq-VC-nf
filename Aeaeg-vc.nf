@@ -313,7 +313,7 @@ gvcfs.into {gvcfs_map; gvcfs_combine}
 sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}.vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
 
-// GenomicsDBImport: import single-sample GVCFs *stuck here*
+// GenomicsDBImport: import single-sample GVCFs
 process combine_gvcfs {
 
     cpus big
@@ -331,9 +331,12 @@ process combine_gvcfs {
 
         cat sample_map.tsv
 
+        echo -e "AaegL5_1\nAaegL5_2\nAaegL5_3" > intervals.list
+
         gatk --java-options "-Xmx4g -Xms4g" \
           GenomicsDBImport \
           --genomicsdb-workspace-path ${work}/gvcf_db \
+          -L intervals.list \
           --sample-name-map sample_map.tsv \
           --tmp-dir . \
           --reader-threads ${task.cpus}
