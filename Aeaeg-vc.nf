@@ -327,8 +327,6 @@ process combine_gvcfs {
       file("gvcf_db.txt") into gvcf_db_success
 
     """
-        mkdir ${work}/gvcf_db
-
         cat sample_map.tsv
 
         echo -e "AaegL5_1\nAaegL5_2\nAaegL5_3" > intervals.list
