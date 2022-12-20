@@ -135,7 +135,8 @@ process bwa_align {
 
     script:
         index_base = bwa_indices[0].toString() - ~/.fa[.a-z]*/
-        sample_id = bwa_indices[0].toString() - ~/-*/
+        sample_id = id.split('-')[0]
+
         readGroup = \
           "@RG\\tID:${id}\\tLB:${sample_id}\\tPL:illumina\\tPM:novaseq\\tSM:${sample_id}"
 
@@ -161,17 +162,7 @@ process bwa_align {
         """
 }
 
-bam_files.into{bam_files1,bam_files2}
 
-bam_files1
-    .map{ it -> [it[key], it] }
-    .cross(bam_files2.map{it -> [it[key], it]})
-    .map { it[0][1] + it[1][1] }
-    .view()
-
-
-// This joins BAM and uBAM channels by ID.
-joined_bams = sorted_bams.join(bam_files)
 
 ////////////////////////////////////////////////
 // ** - merge read groups from same sample into single BAM
@@ -181,16 +172,18 @@ process merge_groups {
     publishDir "${output}/${params.dir}/bams", mode: 'copy', pattern: '*.bam'
     publishDir "${output}/${params.dir}/bams", mode: 'copy', pattern: '*.bam.bai'
 
-    cpus big
+    cpus small
     tag { sample_id }
 
     input:
-        tuple val(sample_id), file(bam) from bam_files
+        tuple val(sample_id), file(bam) from bam_files.groupTuple()
 
     output:
-        tuple sample_id, file("${sample_id}.merged.bam") into merged_bams
+        tuple sample_id, file("${sample_id}.bam") into merged_bams
 
     """
+        samtools merge -cp ${sample_id}.bam ${bam.join(" ")}
+        samtools index -@ ${task.cpus} -b ${sample_id}.bam
 
 
     """
@@ -211,18 +204,18 @@ process mark_dups {
         tuple val(sample_id), file(bam) from merged_bams
 
     output:
-        tuple id, file("${id}_marked_dups.bam") into marked_bams
-        file "${id}_marked_dups_stats.txt" into picard_logs
+        tuple sample_id, file("${sample_id}_marked_dups.bam") into marked_bams
+        file "${sample_id}_marked_dups_stats.txt" into picard_logs
 
     """
         picard -Xmx8g MarkDuplicates \
           I=${bam} \
-          O=${id}_marked_dups.unsorted.bam \
-          M=${id}_marked_dups_stats.txt
+          O=${sample_id}_marked_dups.unsorted.bam \
+          M=${sample_id}_marked_dups_stats.txt
         
         picard -Xmx8g SortSam \
-          I=${id}_marked_dups.unsorted.bam \
-          O=${id}_marked_dups.bam \
+          I=${sample_id}_marked_dups.unsorted.bam \
+          O=${sample_id}_marked_dups.bam \
           SORT_ORDER=coordinate
 
     """
@@ -258,12 +251,12 @@ process base_recalibration {
     tag { id }
 
     input:
-        tuple val(id), file(bam) from marked_bams
+        tuple val(sample_id), file(bam) from marked_bams
         file("reference.fa") from ref_genome
         tuple file(vcf), file(index_csi), file(index_tbi) from known_variants
 
     output:
-        tuple id, file("${bam}"), file("${id}_recal_data.table") into brdt
+        tuple sample_id, file("${bam}"), file("${sample_id}_recal_data.table") into brdt
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -273,7 +266,7 @@ process base_recalibration {
           -I ${bam} \
           -R reference.fa \
           --known-sites ${vcf} \
-          -O ${id}_recal_data.table
+          -O ${sample_id}_recal_data.table
 
     """
 }
@@ -283,15 +276,14 @@ process apply_recalibration {
     //publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: '*.pdf'
 
     cpus big
-    tag { id }
+    tag { sample_id }
 
     input:
-        tuple val(id), file(bam), file(recal_table) from brdt
+        tuple val(sample_id), file(bam), file(recal_table) from brdt
         file("reference.fa") from ref_genome
 
     output:
-        tuple id, file("${id}_recal.bam") into recal_bams
-       // file ("${id}_AnalyzeCovariates.pdf") into recal_logs
+        tuple sample_id, file("${sample_id}_recal.bam") into recal_bams
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -306,11 +298,6 @@ process apply_recalibration {
     """
 }
 
- //       gatk AnalyzeCovariates \
-  //        -bqsr ${recal_table} \
-  //        -plots "${id}_AnalyzeCovariates.pdf"
-
-
 
 ////////////////////////////////////////////////
 // ** - VARIANT CALLING PIPELINE
@@ -321,15 +308,15 @@ process haplotype_caller {
    publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
 
     cpus big
-    tag { id }
+    tag { sample_id }
 
     input:
-        tuple val(id), file(bam) from recal_bams
+        tuple val(sample_id), file(bam) from recal_bams
         file ("reference.fa") from ref_genome
 
     output:
-        tuple val(id), file("${id}.vcf.gz") into gvcfs
-        file("${id}.vcf.gz.tbi") into gvcf_indices
+        tuple val(sample_id), file("${sample_id}.vcf.gz") into gvcfs
+        file("${sample_id}.vcf.gz.tbi") into gvcf_indices
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -339,7 +326,7 @@ process haplotype_caller {
         gatk --java-options "-Xmx4g" HaplotypeCaller  \
           -R reference.fa \
           -I ${bam} \
-          -O ${id}.vcf.gz \
+          -O ${sample_id}.vcf.gz \
           -ERC GVCF
 
         
