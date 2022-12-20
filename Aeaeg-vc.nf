@@ -182,10 +182,10 @@ process merge_groups {
         tuple sample_id, file("${sample_id}.bam") into merged_bams
 
     """
-        samtools merge -cp ${sample_id}.bam ${bam.join(" ")}
+
+        samtools merge -@ ${task.cpus} -cp ${sample_id}.bam ${bam.join(" ")}
         samtools index -@ ${task.cpus} -b ${sample_id}.bam
-
-
+        
     """
 }
 
@@ -293,7 +293,7 @@ process apply_recalibration {
           -R reference.fa \
           -I ${bam} \
           --bqsr-recal-file ${recal_table} \
-          -O "${id}_recal.bam"
+          -O "${sample_id}_recal.bam"
 
     """
 }
