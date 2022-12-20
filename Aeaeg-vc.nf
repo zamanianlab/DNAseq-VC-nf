@@ -130,13 +130,14 @@ process bwa_align {
 
     output:
         file("${id}.flagstat.txt") into bwa_stats
-        tuple id, file("${id}.bam") into bam_files
+        tuple sample_id, file("${id}.bam") into bam_files
         file("${id}.bam.bai") into bam_indices
 
     script:
         index_base = bwa_indices[0].toString() - ~/.fa[.a-z]*/
+        sample_id = bwa_indices[0].toString() - ~/-*/
         readGroup = \
-          "@RG\\tID:${id}\\tLB:${id}\\tPL:illumina\\tPM:novaseq\\tSM:${id}"
+          "@RG\\tID:${id}\\tLB:${sample_id}\\tPL:illumina\\tPM:novaseq\\tSM:${sample_id}"
 
         """
         bwa mem \
@@ -160,6 +161,42 @@ process bwa_align {
         """
 }
 
+bam_files.into{bam_files1,bam_files2}
+
+bam_files1
+    .map{ it -> [it[key], it] }
+    .cross(bam_files2.map{it -> [it[key], it]})
+    .map { it[0][1] + it[1][1] }
+    .view()
+
+
+// This joins BAM and uBAM channels by ID.
+joined_bams = sorted_bams.join(bam_files)
+
+////////////////////////////////////////////////
+// ** - merge read groups from same sample into single BAM
+////////////////////////////////////////////////
+
+process merge_groups {
+    publishDir "${output}/${params.dir}/bams", mode: 'copy', pattern: '*.bam'
+    publishDir "${output}/${params.dir}/bams", mode: 'copy', pattern: '*.bam.bai'
+
+    cpus big
+    tag { sample_id }
+
+    input:
+        tuple val(sample_id), file(bam) from bam_files
+
+    output:
+        tuple sample_id, file("${sample_id}.merged.bam") into merged_bams
+
+    """
+
+
+    """
+}
+
+
 ////////////////////////////////////////////////
 // ** - markdups and sortsam (Picard)
 ////////////////////////////////////////////////
@@ -168,10 +205,10 @@ process mark_dups {
     publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dups_stats.txt'
 
     cpus big
-    tag { id }
+    tag { sample_id }
 
     input:
-        tuple val(id), file(bam) from bam_files
+        tuple val(sample_id), file(bam) from merged_bams
 
     output:
         tuple id, file("${id}_marked_dups.bam") into marked_bams
