@@ -249,7 +249,7 @@ process fetch_variants {
 process base_recalibration {
 
     cpus big
-    tag { id }
+    tag { sample_id }
 
     input:
         tuple val(sample_id), file(bam) from marked_bams
