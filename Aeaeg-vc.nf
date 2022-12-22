@@ -180,7 +180,7 @@ process merge_groups {
 
     output:
         tuple sample_id, file("${sample_id}.bam") into merged_bams
-        file("${sampled_id}.bam.bai") into merged_bam_indices
+        file("${sample_id}.bam.bai") into merged_bam_indices
 
     """
 
