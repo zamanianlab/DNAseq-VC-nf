@@ -43,7 +43,7 @@ process trim_reads {
 
   publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{json,html}'
 
-  cpus small
+  cpus big
   tag { id }
 
   input:
@@ -70,7 +70,7 @@ process fastqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: '*_fastqc.{zip,html}'
 
-    cpus small
+    cpus medium
     tag { id }
 
     when:
@@ -93,7 +93,7 @@ process multiqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: 'multiqc_report.html'
 
-    cpus small
+    cpus medium
 
     when:
       params.qc
@@ -198,7 +198,7 @@ process merge_groups {
 process mark_dups {
     publishDir "${output}/${params.dir}/picard_stats", mode: 'copy', pattern: '*_marked_dups_stats.txt'
 
-    cpus big
+    cpus huge
     tag { sample_id }
 
     input:
@@ -248,7 +248,7 @@ process fetch_variants {
 // base recalibration
 process base_recalibration {
 
-    cpus big
+    cpus huge
     tag { sample_id }
 
     input:
@@ -275,7 +275,7 @@ process base_recalibration {
 // apply recalibration
 process apply_recalibration {
 
-    cpus big
+    cpus huge
     tag { sample_id }
 
     input:
@@ -312,7 +312,7 @@ final_bams = recal_bams.combine(intervals).view()
 // HaplotypeCaller (split by sample interval) -> GVCFs
 process haplotype_caller {
 
-    cpus big
+    cpus medium
     tag { "${sample_id}:${interval}" }
 
     input:
