@@ -27,8 +27,8 @@ params.qc = false
 // ** - Pull in fq files and indexed genome
 ////////////////////////////////////////////////
 
-//Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
-Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
+Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
+//Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
           .set { fqs }
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
@@ -304,20 +304,25 @@ process apply_recalibration {
 // ** - VARIANT CALLING PIPELINE
 ////////////////////////////////////////////////
 
-// single-sample HaplotypeCaller -> GVCFs
+// channel of intervals
+
+intervals = Channel.from("AaegL5_1","AaegL5_2","AaegL5_3")
+final_bams = recal_bams.combine(intervals).view()
+
+
+// single-sample HaplotypeCaller (split by interval) -> GVCFs
 process haplotype_caller {
-   publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
 
     cpus big
     tag { sample_id }
 
     input:
-        tuple val(sample_id), file(bam) from recal_bams
+        tuple val(sample_id), file(bam), val(interval) from final_bams
         file ("reference.fa") from ref_genome
 
     output:
-        tuple val(sample_id), file("${sample_id}.vcf.gz") into gvcfs
-        file("${sample_id}.vcf.gz.tbi") into gvcf_indices
+        tuple val(sample_id), val(interval), file("${sample_id}.${interval}.vcf.gz") into interval_gvcfs
+        file("${sample_id}.${interval}.vcf.gz.tbi") into interval_gvcf_indices
 
     """
         gatk CreateSequenceDictionary -R reference.fa
@@ -327,19 +332,43 @@ process haplotype_caller {
         gatk --java-options "-Xmx4g" HaplotypeCaller  \
           -R reference.fa \
           -I ${bam} \
-          -O ${sample_id}.vcf.gz \
+          -O ${sample_id}.${interval}.vcf.gz \
+          -L ${interval} \
           -ERC GVCF
-
         
     """
 }
+
+// combine GVCF intervals for each sample
+process gvcf_interval_combine {
+   publishDir "${output}/${params.dir}/gvcf", mode: 'copy', pattern: '*.vcf.gz'
+
+    cpus small
+    tag { sample_id }
+
+    input:
+        tuple val(sample_id), val(interval), file(gvcf_i) from interval_gvcfs.groupTuple()
+
+
+    output:
+        tuple val(sample_id), file("${sample_id}.vcf.gz") into gvcfs
+        file("${sample_id}.vcf.gz.tbi") into gvcf_indices
+
+    """
+        
+        bcftools concat -O z -o ${sample_id}.vcf.gz ${gvcf_i.join(" ")}
+        gatk IndexFeatureFile -I ${sample_id}.vcf.gz
+
+    """
+}
+
 
 gvcfs.into {gvcfs_map; gvcfs_combine}
 sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}.vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
 
 // GenomicsDBImport: import single-sample GVCFs
-process combine_gvcfs {
+process dbimport_gvcfs {
 
     cpus big
 
