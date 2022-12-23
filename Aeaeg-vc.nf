@@ -274,7 +274,6 @@ process base_recalibration {
 
 // apply recalibration
 process apply_recalibration {
-    //publishDir "${output}/${params.dir}/base_recal", mode: 'copy', pattern: '*.pdf'
 
     cpus big
     tag { sample_id }
@@ -310,7 +309,7 @@ intervals = Channel.from("AaegL5_1","AaegL5_2","AaegL5_3")
 final_bams = recal_bams.combine(intervals).view()
 
 
-// single-sample HaplotypeCaller (split by interval) -> GVCFs
+// HaplotypeCaller (split by sample interval) -> GVCFs
 process haplotype_caller {
 
     cpus big
@@ -363,6 +362,7 @@ process gvcf_interval_combine {
 }
 
 
+//create sample map
 gvcfs.into {gvcfs_map; gvcfs_combine}
 sample_map = gvcfs_map.map { "${it[0]}\t${it[0]}.vcf.gz" }.collectFile(name: "sample_map.tsv", newLine: true)
 
