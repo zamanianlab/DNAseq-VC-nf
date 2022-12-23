@@ -313,7 +313,7 @@ final_bams = recal_bams.combine(intervals).view()
 process haplotype_caller {
 
     cpus big
-    tag { sample_id }
+    tag { "${sample_id}:${interval}" }
 
     input:
         tuple val(sample_id), file(bam), val(interval) from final_bams
