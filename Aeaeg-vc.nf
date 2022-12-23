@@ -27,8 +27,8 @@ params.qc = false
 // ** - Pull in fq files and indexed genome
 ////////////////////////////////////////////////
 
-//Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
-Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
+Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
+//Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
           .set { fqs }
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
@@ -70,7 +70,7 @@ process fastqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: '*_fastqc.{zip,html}'
 
-    cpus medium
+    cpus med
     tag { id }
 
     when:
@@ -93,7 +93,7 @@ process multiqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: 'multiqc_report.html'
 
-    cpus medium
+    cpus med
 
     when:
       params.qc
@@ -312,7 +312,7 @@ final_bams = recal_bams.combine(intervals).view()
 // HaplotypeCaller (split by sample interval) -> GVCFs
 process haplotype_caller {
 
-    cpus medium
+    cpus med
     tag { "${sample_id}:${interval}" }
 
     input:
