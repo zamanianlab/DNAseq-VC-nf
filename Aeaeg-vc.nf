@@ -8,6 +8,7 @@ aux=params.aux
 
 huge=params.huge
 big=params.big
+med=params.med
 small=params.small
 
 // Global Params
@@ -27,8 +28,8 @@ params.qc = false
 // ** - Pull in fq files and indexed genome
 ////////////////////////////////////////////////
 
-Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
-//Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
+//Channel.fromFilePairs(input + "/fqs/*_R{1,2}.fq.gz", flat: true) //for subsampled data
+Channel.fromFilePairs(input + "/fqs/*_R{1,2}_001.f[a-z]*q.gz", flat: true) //for full dataset
           .set { fqs }
 
 bwa_indices = Channel.fromPath(input + "/Aeaegypti_ref/reference.*" )
