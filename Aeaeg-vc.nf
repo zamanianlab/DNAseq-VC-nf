@@ -44,7 +44,7 @@ process trim_reads {
 
   publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{json,html}'
 
-  cpus big
+  cpus small
   tag { id }
 
   input:
@@ -71,7 +71,7 @@ process fastqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: '*_fastqc.{zip,html}'
 
-    cpus med
+    cpus small
     tag { id }
 
     when:
@@ -94,7 +94,7 @@ process multiqc {
 
     publishDir "${output}/${params.dir}/fastqc", mode: 'copy', pattern: 'multiqc_report.html'
 
-    cpus med
+    cpus small
 
     when:
       params.qc
