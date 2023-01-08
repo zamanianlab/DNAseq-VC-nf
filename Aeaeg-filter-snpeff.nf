@@ -108,8 +108,8 @@ process filter_indels {
     script:
 
     """
-    gatk VariantFiltration \ 
-        -V ${indels_vcf} \ 
+    gatk VariantFiltration \
+        -V ${indels_vcf} \
         -filter "QD < 2.0" --filter-name "QD2" \
         -filter "QUAL < 30.0" --filter-name "QUAL30" \
         -filter "FS > 200.0" --filter-name "FS200" \
@@ -140,7 +140,7 @@ process merge_vcf {
     """
       picard -Xmx8g MergeVcfss \
             I=${snps_filtered} \
-            I=${indels_filtered}\
+            I=${indels_filtered} \
             O=filtered.vcf.gz
     """
 }
