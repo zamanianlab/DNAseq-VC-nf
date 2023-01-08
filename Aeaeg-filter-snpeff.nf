@@ -138,7 +138,7 @@ process merge_vcf {
     script:
 
     """
-      picard -Xmx8g MergeVcfss \
+      picard -Xmx8g MergeVcfs \
             I=${snps_filtered} \
             I=${indels_filtered} \
             O=filtered.vcf.gz
