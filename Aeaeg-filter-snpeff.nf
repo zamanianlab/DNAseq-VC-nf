@@ -20,8 +20,9 @@ println "dir: $params.dir"
 ////////////////////////////////////////////////
 // ** - Pull in vcf file
 ////////////////////////////////////////////////
-input_vcf = file.fromPath(input + "*.vcf.gz" )
+input_vcf = file.fromPath(input + "/*.vcf.gz" )
 
+ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 
 ////////////////////////////////////////////////
 // ** - hard-filter variants
