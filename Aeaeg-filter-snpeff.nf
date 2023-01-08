@@ -113,7 +113,7 @@ process filter_indels {
         -filter "QD < 2.0" --filter-name "QD2" \
         -filter "QUAL < 30.0" --filter-name "QUAL30" \
         -filter "FS > 200.0" --filter-name "FS200" \
-        -filter "ReadPosRankSum < -20.0" --filter-name "ReadPosRankSum-20" \ 
+        -filter "ReadPosRankSum < -20.0" --filter-name "ReadPosRankSum-20" \
         -O indels_filtered.vcf.gz
     """
 }
