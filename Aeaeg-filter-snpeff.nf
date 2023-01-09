@@ -16,13 +16,14 @@ params.dir = null
 if( !params.dir ) error "Missing dir parameter"
 println "dir: $params.dir"
 
+println "input: $input"
 
 ////////////////////////////////////////////////
 // ** - Pull in vcf file
 ////////////////////////////////////////////////
 input_vcf = file(input + "/*.vcf.gz" )
 
-ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+//ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 
 ////////////////////////////////////////////////
 // ** - hard-filter variants
@@ -32,7 +33,7 @@ ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 process split_snps {
 
     cpus small
-    tag { id }
+    tag { unfilt_vcf }
 
     input:
       file(unfilt_vcf) from input_vcf
@@ -53,7 +54,6 @@ process split_snps {
 process split_indels {
 
     cpus small
-    tag { id }
 
     input:
       file(unfilt_vcf) from input_vcf
@@ -74,6 +74,8 @@ process split_indels {
 
 // filter variants
 process filter_snps {
+
+    cpus small
 
     input:
       file(snps_vcf) from snps.vcf
@@ -99,6 +101,8 @@ process filter_snps {
 }
 
 process filter_indels {
+
+    cpus small
 
     input:
       file(indels_vcf) from indels.vcf
