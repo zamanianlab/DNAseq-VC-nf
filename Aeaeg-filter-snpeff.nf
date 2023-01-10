@@ -23,14 +23,15 @@ println "input: $input"
 ////////////////////////////////////////////////
 input_vcf = file(input + "/*.vcf.gz" )
 
-//ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+
 
 ////////////////////////////////////////////////
 // ** - hard-filter variants
 ////////////////////////////////////////////////
 
 // split snps and indels
-process split_snps {
+process split_snps_indels {
 
     cpus small
     tag { unfilt_vcf }
@@ -40,34 +41,23 @@ process split_snps {
 
     output:
       file "snps.vcf.gz" into snps_vcf
-
-    script:
-
-    """
-      gatk SelectVariants \
-        -V ${unfilt_vcf} \
-        -select-type SNP \
-        -O snps.vcf.gz
-    """
-}
-
-process split_indels {
-
-    cpus small
-
-    input:
-      file(unfilt_vcf) from input_vcf
-
-    output:
       file "indels.vcf.gz" into indels_vcf
 
     script:
 
     """
+      gatk IndexFeatureFile -I ${unfilt_vcf}
+
+      gatk SelectVariants \
+        -V ${unfilt_vcf} \
+        -select-type SNP \
+        -O snps.vcf.gz
+
       gatk SelectVariants \
         -V ${unfilt_vcf} \
         -select-type INDEL \
         -O indels.vcf.gz
+
     """
 }
 
