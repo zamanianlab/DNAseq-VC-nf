@@ -16,14 +16,13 @@ params.dir = null
 if( !params.dir ) error "Missing dir parameter"
 println "dir: $params.dir"
 
-println "input: $input"
 
 ////////////////////////////////////////////////
 // ** - Pull in vcf file
 ////////////////////////////////////////////////
 input_vcf = file(input + "/*.vcf.gz" )
 
-ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
+//ref_genome = file(input + "/Aeaegypti_ref/reference.fa")
 
 
 ////////////////////////////////////////////////
