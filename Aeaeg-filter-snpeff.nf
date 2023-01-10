@@ -39,8 +39,11 @@ process split_snps_indels {
       file(unfilt_vcf) from input_vcf
 
     output:
-      file "snps.vcf.gz", file "snps.vcf.gz.tbi" into snps_vcf
-      file "indels.vcf.gz", file "indels.vcf.gz.tbi" into indels_vcf
+      file "snps.vcf.gz" into snps_vcf
+      file "snps.vcf.gz.tbi" into snps_vcf_index
+
+      file "indels.vcf.gz" into indels_vcf
+      file "indels.vcf.gz.tbi" into indels_vcf_index
 
     script:
 
@@ -68,7 +71,8 @@ process filter_snps {
     cpus small
 
     input:
-      file(snps), file(snps_index) from snps_vcf
+      file(snps) from snps_vcf
+      file(snps_index) from snps_vcf_index
 
     output:
       file "snps_filtered.vcf.gz", file "snps_filtered.vcf.gz.tbi" into snps_filtered_vcf
@@ -96,10 +100,12 @@ process filter_indels {
     cpus small
 
     input:
-      file(indels), file(indelx_index) from indels_vcf
+      file(indels) from indelx_vcf
+      file(indels_index) from indels_vcf_index
 
     output:
-      file "indels_filtered.vcf.gz", file "indels_filtered.vcf.gz.tbi" into indels_filtered_vcf
+      file "indels_filtered.vcf.gz" into indels_filtered_vcf
+      file "indels_filtered.vcf.gz.tbi" into indels_filtered_vcf_index
 
     script:
 
@@ -127,8 +133,10 @@ process merge_vcf {
       params.qc
 
     input:
-      file (snps_filtered), file (snps_filtered_index) from snps_filtered_vcf
-      file (indels_filtered), file (indels_filtered_index) from indels_filtered_vcf
+      file (snps_filtered) from snps_filtered_vcf
+      file (snps_filtered_index) from snps_filtered_vcf_index
+      file (indels_filtered) from indels_filtered_vcf
+      file (indels_filtered_index) from indels_filtered_vcf_index
 
     output:
       file "filtered.vcf.gz" into filtered_vcf
