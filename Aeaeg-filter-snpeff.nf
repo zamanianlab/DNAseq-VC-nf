@@ -75,7 +75,8 @@ process filter_snps {
       file(snps_index) from snps_vcf_index
 
     output:
-      file "snps_filtered.vcf.gz", file "snps_filtered.vcf.gz.tbi" into snps_filtered_vcf
+      file "snps_filtered.vcf.gz" into snps_filtered_vcf
+      file "snps_filtered.vcf.gz.tbi" into snps_filtered_vcf_index
 
     script:
 
@@ -100,7 +101,7 @@ process filter_indels {
     cpus small
 
     input:
-      file(indels) from indelx_vcf
+      file(indels) from indels_vcf
       file(indels_index) from indels_vcf_index
 
     output:
