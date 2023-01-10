@@ -130,9 +130,6 @@ process merge_vcf {
 
     cpus small
 
-    when:
-      params.qc
-
     input:
       file (snps_filtered) from snps_filtered_vcf
       file (snps_filtered_index) from snps_filtered_vcf_index
