@@ -39,8 +39,8 @@ process split_snps_indels {
       file(unfilt_vcf) from input_vcf
 
     output:
-      file "snps.vcf.gz" into snps_vcf
-      file "indels.vcf.gz" into indels_vcf
+      file "snps.vcf.gz", file "snps.vcf.gz.tbi" into snps_vcf
+      file "indels.vcf.gz", file "indels.vcf.gz.tbi" into indels_vcf
 
     script:
 
@@ -51,12 +51,13 @@ process split_snps_indels {
         -V ${unfilt_vcf} \
         -select-type SNP \
         -O snps.vcf.gz
+      gatk IndexFeatureFile -I snps.vcf.gz
 
       gatk SelectVariants \
         -V ${unfilt_vcf} \
         -select-type INDEL \
         -O indels.vcf.gz
-
+      gatk IndexFeatureFile -I indels.vcf.gz
     """
 }
 
@@ -67,10 +68,10 @@ process filter_snps {
     cpus small
 
     input:
-      file(snps) from snps_vcf
+      file(snps), file(snps_index) from snps_vcf
 
     output:
-      file "snps_filtered.vcf.gz" into snps_filtered_vcf
+      file "snps_filtered.vcf.gz", file "snps_filtered.vcf.gz.tbi" into snps_filtered_vcf
 
     script:
 
@@ -86,6 +87,7 @@ process filter_snps {
       -filter "ReadPosRankSum < -8.0" --filter-name "ReadPosRankSum-8" \
       -O snps_filtered.vcf.gz
 
+    gatk IndexFeatureFile -I snps_filtered.vcf.gz
     """
 }
 
@@ -94,10 +96,10 @@ process filter_indels {
     cpus small
 
     input:
-      file(indels) from indels_vcf
+      file(indels), file(indelx_index) from indels_vcf
 
     output:
-      file "indels_filtered.vcf.gz" into indels_filtered_vcf
+      file "indels_filtered.vcf.gz", file "indels_filtered.vcf.gz.tbi" into indels_filtered_vcf
 
     script:
 
@@ -109,6 +111,8 @@ process filter_indels {
         -filter "FS > 200.0" --filter-name "FS200" \
         -filter "ReadPosRankSum < -20.0" --filter-name "ReadPosRankSum-20" \
         -O indels_filtered.vcf.gz
+
+    gatk IndexFeatureFile -I indels_filtered.vcf.gz
     """
 }
 
@@ -123,8 +127,8 @@ process merge_vcf {
       params.qc
 
     input:
-      file (snps_filtered) from snps_filtered_vcf
-      file (indels_filtered) from indels_filtered_vcf
+      file (snps_filtered), file (snps_filtered_index) from snps_filtered_vcf
+      file (indels_filtered), file (indels_filtered_index) from indels_filtered_vcf
 
     output:
       file "filtered.vcf.gz" into filtered_vcf
