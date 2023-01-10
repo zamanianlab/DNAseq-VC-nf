@@ -39,7 +39,7 @@ process split_snps {
       file(unfilt_vcf) from input_vcf
 
     output:
-      file "snps.vcf.gz" into snps.vcf
+      file "snps.vcf.gz" into snps_vcf
 
     script:
 
@@ -59,7 +59,7 @@ process split_indels {
       file(unfilt_vcf) from input_vcf
 
     output:
-      file "indels.vcf.gz" into indels.vcf
+      file "indels.vcf.gz" into indels_vcf
 
     script:
 
@@ -78,16 +78,16 @@ process filter_snps {
     cpus small
 
     input:
-      file(snps_vcf) from snps.vcf
+      file(snps) from snps_vcf
 
     output:
-      file "snps_filtered.vcf.gz" into snps.filtered.vcf
+      file "snps_filtered.vcf.gz" into snps_filtered_vcf
 
     script:
 
     """
     gatk VariantFiltration \
-      -V ${snps_vcf} \
+      -V ${snps} \
       -filter "QD < 2.0" --filter-name "QD2" \
       -filter "QUAL < 30.0" --filter-name "QUAL30" \
       -filter "SOR > 3.0" --filter-name "SOR3" \
@@ -105,16 +105,16 @@ process filter_indels {
     cpus small
 
     input:
-      file(indels_vcf) from indels.vcf
+      file(indels) from indels_vcf
 
     output:
-      file "indels_filtered.vcf.gz" into indels.filtered.vcf
+      file "indels_filtered.vcf.gz" into indels_filtered_vcf
 
     script:
 
     """
     gatk VariantFiltration \
-        -V ${indels_vcf} \
+        -V ${indels} \
         -filter "QD < 2.0" --filter-name "QD2" \
         -filter "QUAL < 30.0" --filter-name "QUAL30" \
         -filter "FS > 200.0" --filter-name "FS200" \
@@ -134,11 +134,11 @@ process merge_vcf {
       params.qc
 
     input:
-      file (snps_filtered) from snps.filtered.vcf
-      file (indels_filtered) from indels.filtered.vcf
+      file (snps_filtered) from snps_filtered_vcf
+      file (indels_filtered) from indels_filtered_vcf
 
     output:
-      file "filtered.vcf.gz" into filtered.vcf
+      file "filtered.vcf.gz" into filtered_vcf
 
     script:
 
