@@ -20,8 +20,8 @@ println "dir: $params.dir"
 // ** - Fetch genome and gene annotation files
 ////////////////////////////////////////////////
 
-genome_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/fasta/data/VectorBase-59_AaegyptiLVP_AGWG_Genome.fasta"
-annot_url="https://vectorbase.org/common/downloads/Current_Release/AaegyptiLVP_AGWG/gff/data/VectorBase-59_AaegyptiLVP_AGWG.gff"
+genome_url="https://vectorbase.org/common/downloads/release-65/AaegyptiLVP_AGWG/fasta/data/VectorBase-65_AaegyptiLVP_AGWG_Genome.fasta"
+annot_url="https://vectorbase.org/common/downloads/release-65/AaegyptiLVP_AGWG/gff/data/VectorBase-65_AaegyptiLVP_AGWG.gff"
 
 process fetch_ref {
 
